@@ -1,4 +1,10 @@
 -- CreateEnum
+CREATE TYPE "CampaignType" AS ENUM ('TEMPLATE', 'IMAGE');
+
+-- CreateEnum
+CREATE TYPE "ImageCaptionMode" AS ENUM ('NONE', 'TITLE', 'DESCRIPTION');
+
+-- CreateEnum
 CREATE TYPE "UserRole" AS ENUM ('vendor_owner', 'owner', 'vendor_admin', 'sales');
 
 -- CreateEnum
@@ -27,6 +33,9 @@ CREATE TABLE "User" (
     "email" TEXT NOT NULL,
     "passwordHash" TEXT NOT NULL,
     "role" "UserRole" NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'active',
+    "isOnline" BOOLEAN NOT NULL DEFAULT false,
+    "lastLoginAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -225,9 +234,19 @@ CREATE TABLE "TemplateLanguage" (
 CREATE TABLE "Campaign" (
     "id" TEXT NOT NULL,
     "vendorId" TEXT NOT NULL,
+    "type" "CampaignType" NOT NULL,
     "templateId" TEXT,
+    "categoryId" INTEGER,
+    "subCategoryId" INTEGER,
+    "imageLimit" INTEGER DEFAULT 100,
+    "captionMode" "ImageCaptionMode",
     "name" TEXT,
     "filters" JSONB,
+    "totalMessages" INTEGER NOT NULL DEFAULT 0,
+    "sentMessages" INTEGER NOT NULL DEFAULT 0,
+    "failedMessages" INTEGER NOT NULL DEFAULT 0,
+    "startedAt" TIMESTAMP(3),
+    "completedAt" TIMESTAMP(3),
     "status" TEXT NOT NULL DEFAULT 'draft',
     "scheduledAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -392,6 +411,12 @@ CREATE UNIQUE INDEX "TemplateMedia_templateId_language_position_key" ON "Templat
 
 -- CreateIndex
 CREATE UNIQUE INDEX "TemplateLanguage_templateId_language_key" ON "TemplateLanguage"("templateId", "language");
+
+-- CreateIndex
+CREATE INDEX "Campaign_vendorId_idx" ON "Campaign"("vendorId");
+
+-- CreateIndex
+CREATE INDEX "Campaign_type_idx" ON "Campaign"("type");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "MessageDelivery_messageMediaId_conversationId_key" ON "MessageDelivery"("messageMediaId", "conversationId");
